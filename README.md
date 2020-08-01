@@ -7,6 +7,6 @@ About the project:
 
 The project demonstrates a working docker setup involving PostgreSQL and Barman docker containers. 
 
-The setup actually consists of two pairs or PostgreSQL & Barman docker containers (each in their own docker network) to represent the Primary & Standby. The PostgreSQL database in the Primary is incrementally backed up in a nightly schedule & is restored remotely in the Standby.
+The setup actually consists of two pairs of PostgreSQL & Barman docker containers (each in their own docker network) to represent the Primary & Standby. The PostgreSQL database in the Primary is incrementally backed up in a nightly schedule & is restored remotely in the Standby.
 
 
