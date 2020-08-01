@@ -1,0 +1,76 @@
+version: '3.2'
+
+services:
+  postgres-source-db:
+    image: localhost:5000/postgres-source-db:latest
+    build: .
+    ports:
+    - "6432:5432"
+    - "122:22"
+    volumes:
+      - type: bind
+        source: /root/incremental_backup_restore_demo/postgresdatabase/db/data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: /root/incremental_backup_restore_demo/postgresdatabase/db/sshkeys
+        target: /tmp/.ssh
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=hot_standby"
+      - "-c"
+      - "port=5432"
+      - "-c"
+      - "hba_file=/var/lib/postgresql/config/pg_hba.conf"
+      - "-c"
+      - "archive_mode=on"
+      - "-c"
+      - "archive_command=rsync -a %p barman@pg-barman:/backup/barman/postgres-source-db/incoming/%f"
+      - "-c"
+      - "max_wal_senders=2"
+      - "-c"
+      - "max_replication_slots=2"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "5"
+    networks:
+      - spectre-network-test
+
+
+  pg-barman:
+    image: localhost:5000/pg-barman:latest
+    build: ../Barman/.
+    ports:
+    - "222:22"
+    volumes:
+      - type: bind
+        source: /root/incremental_backup_restore_demo/pgbarman/backupcfg
+        target: /etc/barman.d
+      - type: bind
+        source: /root/incremental_backup_restore_demo/pgbarman/backups
+        target: /backup/barman
+      - type: bind
+        source: /root/incremental_backup_restore_demo/pgbarman/log
+        target: /var/log/barman
+      - type: bind
+        source: /root/incremental_backup_restore_demo/pgbarman/sshkeys
+        target: /tmp/.ssh
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "5"
+    networks:
+      - spectre-network-test
+
+
+networks:
+  spectre-network-test:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+      - subnet: 174.19.239.0/24
